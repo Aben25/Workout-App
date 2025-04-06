@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { useSupabase } from '../lib/SupabaseContext';
+import { useSupabase } from '../../lib/SupabaseContext';
 import { router } from 'expo-router';
 
 export default function TabLayout() {
@@ -44,7 +44,7 @@ export default function TabLayout() {
         name="workouts"
         options={{
           title: 'Workouts',
-          tabBarIcon: ({ color }) => <FontAwesome name="dumbbell" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome name="heartbeat" size={24} color={color} />,
         }}
       />
       <Tabs.Screen

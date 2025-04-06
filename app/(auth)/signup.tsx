@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { useSupabase } from '../lib/SupabaseContext';
+import { useSupabase } from '../../lib/SupabaseContext';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');

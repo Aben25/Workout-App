@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useSupabase } from '../lib/SupabaseContext';
-import { Workout, Exercise, WorkoutExercise } from '../../lib/database.types';
+import { useSupabase } from '../../../lib/SupabaseContext';
+import { Workout, Exercise, WorkoutExercise } from '../../../lib/database.types';
 import { FontAwesome } from '@expo/vector-icons';
 
 export default function StartWorkoutScreen() {
@@ -225,7 +225,7 @@ export default function StartWorkoutScreen() {
           
           <View style={styles.workoutInfo}>
             <Text style={styles.infoText}>
-              <FontAwesome name="dumbbell" size={16} color="#666" /> {workoutExercises.length} Exercises
+              <FontAwesome name="bicycle" size={16} color="#666" /> {workoutExercises.length} Exercises
             </Text>
             {workout.duration && (
               <Text style={styles.infoText}>
