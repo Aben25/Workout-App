@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useSupabase } from '../../lib/SupabaseContext';
+import { useSupabase } from '../lib/SupabaseContext';
 import { Workout, Exercise, WorkoutExercise } from '../../lib/database.types';
 import { FontAwesome } from '@expo/vector-icons';
 

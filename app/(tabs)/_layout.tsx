@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { useSupabase } from '../../lib/SupabaseContext';
+import { useSupabase } from '../lib/SupabaseContext';
 import { router } from 'expo-router';
 
 export default function TabLayout() {

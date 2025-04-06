@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions } from 'react-native';
-import { useSupabase } from '../../lib/SupabaseContext';
+import { useSupabase } from '../lib/SupabaseContext';
 import { LineChart } from 'react-native-chart-kit';
 import { UserProgress, WorkoutLog } from '../../lib/database.types';
 
