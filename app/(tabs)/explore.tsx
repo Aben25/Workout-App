@@ -1,109 +1,204 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
+import { colors, typography, spacing, commonStyles } from '../lib/styles';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import { SectionHeader } from '../components/Navigation';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+export default function ExploreScreen() {
+  const workoutCategories = [
+    { id: 1, name: 'Strength Training', icon: 'dumbbell' },
+    { id: 2, name: 'Cardio', icon: 'heartbeat' },
+    { id: 3, name: 'Flexibility', icon: 'child' },
+    { id: 4, name: 'HIIT', icon: 'bolt' },
+    { id: 5, name: 'Recovery', icon: 'bed' },
+  ];
 
-export default function TabTwoScreen() {
+  const featuredWorkouts = [
+    { id: 1, name: 'Full Body Strength', difficulty: 'Intermediate', duration: 45 },
+    { id: 2, name: '30-Minute HIIT', difficulty: 'Advanced', duration: 30 },
+    { id: 3, name: 'Morning Yoga Flow', difficulty: 'Beginner', duration: 20 },
+  ];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <SectionHeader title="Explore" />
+      
+      <View style={styles.welcomeSection}>
+        <Text style={styles.welcomeText}>Discover new workouts and exercises to enhance your fitness journey</Text>
+      </View>
+      
+      <View style={styles.categoriesSection}>
+        <Text style={styles.sectionTitle}>Workout Categories</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScrollView}>
+          {workoutCategories.map(category => (
+            <TouchableOpacity key={category.id} style={styles.categoryCard}>
+              <View style={styles.categoryIconContainer}>
+                <FontAwesome name={category.icon} size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.categoryName}>{category.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+      
+      <View style={styles.featuredSection}>
+        <Text style={styles.sectionTitle}>Featured Workouts</Text>
+        {featuredWorkouts.map(workout => (
+          <Card key={workout.id} style={styles.workoutCard}>
+            <View style={styles.workoutCardContent}>
+              <View>
+                <Text style={styles.workoutName}>{workout.name}</Text>
+                <View style={styles.workoutDetails}>
+                  <View style={styles.workoutDetail}>
+                    <FontAwesome name="signal" size={14} color={colors.gray} style={styles.detailIcon} />
+                    <Text style={styles.detailText}>{workout.difficulty}</Text>
+                  </View>
+                  <View style={styles.workoutDetail}>
+                    <FontAwesome name="clock-o" size={14} color={colors.gray} style={styles.detailIcon} />
+                    <Text style={styles.detailText}>{workout.duration} min</Text>
+                  </View>
+                </View>
+              </View>
+              <Button 
+                title="View" 
+                variant="outline" 
+                size="small" 
+                onPress={() => {}} 
+              />
+            </View>
+          </Card>
+        ))}
+      </View>
+      
+      <View style={styles.tipsSection}>
+        <Text style={styles.sectionTitle}>Fitness Tips</Text>
+        <Card style={styles.tipCard}>
+          <Text style={styles.tipTitle}>Stay Hydrated</Text>
+          <Text style={styles.tipText}>
+            Drinking enough water is crucial for optimal performance during workouts. 
+            Aim for at least 8 glasses of water daily, and more on workout days.
+          </Text>
+        </Card>
+        <Card style={styles.tipCard}>
+          <Text style={styles.tipTitle}>Rest & Recovery</Text>
+          <Text style={styles.tipText}>
+            Allow your muscles time to recover between intense workouts. 
+            Quality sleep and active recovery days are essential for progress.
+          </Text>
+        </Card>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
-  titleContainer: {
+  contentContainer: {
+    padding: spacing.md,
+  },
+  welcomeSection: {
+    marginBottom: spacing.lg,
+  },
+  welcomeText: {
+    fontSize: typography.fontSizes.md,
+    color: colors.gray,
+    lineHeight: 22,
+  },
+  sectionTitle: {
+    fontSize: typography.fontSizes.lg,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
+    marginBottom: spacing.md,
+  },
+  categoriesSection: {
+    marginBottom: spacing.xl,
+  },
+  categoriesScrollView: {
+    marginLeft: -spacing.sm,
+  },
+  categoryCard: {
+    width: 120,
+    height: 100,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginLeft: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  categoryIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: `${colors.primary}10`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  categoryName: {
+    fontSize: typography.fontSizes.sm,
+    fontWeight: typography.fontWeights.medium,
+    color: colors.dark,
+    textAlign: 'center',
+  },
+  featuredSection: {
+    marginBottom: spacing.xl,
+  },
+  workoutCard: {
+    marginBottom: spacing.md,
+  },
+  workoutCardContent: {
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  workoutName: {
+    fontSize: typography.fontSizes.md,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
+    marginBottom: spacing.xs,
+  },
+  workoutDetails: {
+    flexDirection: 'row',
+  },
+  workoutDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  detailIcon: {
+    marginRight: spacing.xs,
+  },
+  detailText: {
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
+  },
+  tipsSection: {
+    marginBottom: spacing.xl,
+  },
+  tipCard: {
+    marginBottom: spacing.md,
+  },
+  tipTitle: {
+    fontSize: typography.fontSizes.md,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
+    marginBottom: spacing.xs,
+  },
+  tipText: {
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
+    lineHeight: 20,
   },
 });

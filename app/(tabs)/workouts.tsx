@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { useSupabase } from '../../lib/SupabaseContext';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
-import { Workout } from '../../lib/database.types';
 import { FontAwesome } from '@expo/vector-icons';
+import { useSupabase } from '../lib/SupabaseContext';
+import { colors, typography, spacing, commonStyles } from '../lib/styles';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import { DifficultyBadge } from '../components/Badge';
+import { EmptyState } from '../components/Navigation';
 
 export default function WorkoutsScreen() {
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const supabase = useSupabase();
 
@@ -24,7 +28,13 @@ export default function WorkoutsScreen() {
       
       const { data, error } = await supabase
         .from('workouts')
-        .select('*')
+        .select(`
+          *,
+          workout_exercises(
+            id,
+            exercise:exercises(name, muscle_group)
+          )
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
         
@@ -32,226 +42,175 @@ export default function WorkoutsScreen() {
       
       setWorkouts(data || []);
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.error('Error fetching workouts:', error);
     } finally {
       setLoading(false);
     }
   }
 
-  function navigateToWorkoutDetail(id: string) {
-    router.push(`/workout/${id}`);
-  }
-
-  function navigateToCreateWorkout() {
-    router.push('/create-workout');
-  }
-
-  if (loading) {
+  function renderWorkoutItem({ item }) {
+    const exerciseCount = item.workout_exercises?.length || 0;
+    
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#3498db" />
-      </View>
+      <Card style={styles.workoutCard}>
+        <TouchableOpacity 
+          style={styles.workoutCardContent}
+          onPress={() => router.push(`/workout/${item.id}`)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.workoutHeader}>
+            <Text style={styles.workoutName}>{item.name}</Text>
+            {item.difficulty && (
+              <DifficultyBadge difficulty={item.difficulty} />
+            )}
+          </View>
+          
+          {item.description && (
+            <Text style={styles.workoutDescription} numberOfLines={2}>
+              {item.description}
+            </Text>
+          )}
+          
+          <View style={styles.workoutDetails}>
+            <View style={styles.workoutDetail}>
+              <FontAwesome name="list" size={14} color={colors.gray} style={styles.detailIcon} />
+              <Text style={styles.detailText}>
+                {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
+              </Text>
+            </View>
+            
+            {item.estimated_duration && (
+              <View style={styles.workoutDetail}>
+                <FontAwesome name="clock-o" size={14} color={colors.gray} style={styles.detailIcon} />
+                <Text style={styles.detailText}>{item.estimated_duration} min</Text>
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.workoutActions}>
+            <Button
+              title="Start"
+              icon="play"
+              size="small"
+              onPress={(e) => {
+                e.stopPropagation();
+                router.push(`/workout/${item.id}/start`);
+              }}
+              style={styles.startButton}
+            />
+          </View>
+        </TouchableOpacity>
+      </Card>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Workouts</Text>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={navigateToCreateWorkout}
-        >
-          <FontAwesome name="plus" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>New Workout</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {workouts.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>You don't have any workouts yet.</Text>
-          <Text style={styles.emptySubText}>Create your first workout to get started!</Text>
-          <TouchableOpacity 
-            style={styles.createButton}
-            onPress={navigateToCreateWorkout}
-          >
-            <Text style={styles.createButtonText}>Create Workout</Text>
-          </TouchableOpacity>
+    <View style={commonStyles.container}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
-          data={workouts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={styles.workoutCard}
-              onPress={() => navigateToWorkoutDetail(item.id)}
-            >
-              <View style={styles.workoutHeader}>
-                <Text style={styles.workoutName}>{item.name}</Text>
-                {item.difficulty && (
-                  <View style={[
-                    styles.difficultyBadge, 
-                    item.difficulty === 'beginner' ? styles.beginnerBadge : 
-                    item.difficulty === 'intermediate' ? styles.intermediateBadge : 
-                    styles.advancedBadge
-                  ]}>
-                    <Text style={styles.difficultyText}>
-                      {item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              
-              {item.description && (
-                <Text style={styles.workoutDescription} numberOfLines={2}>
-                  {item.description}
-                </Text>
-              )}
-              
-              <View style={styles.workoutFooter}>
-                {item.duration && (
-                  <View style={styles.workoutStat}>
-                    <FontAwesome name="clock-o" size={14} color="#666" />
-                    <Text style={styles.workoutStatText}>{item.duration} min</Text>
-                  </View>
-                )}
-                <Text style={styles.workoutDate}>
-                  {new Date(item.created_at).toLocaleDateString()}
-                </Text>
-              </View>
-            </TouchableOpacity>
+        <>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>My Workouts</Text>
+            <Button
+              title="Create"
+              icon="plus"
+              size="small"
+              onPress={() => router.push('/create-workout')}
+            />
+          </View>
+          
+          {workouts.length === 0 ? (
+            <EmptyState
+              icon="dumbbell"
+              title="No Workouts Yet"
+              message="Create your first workout to get started on your fitness journey."
+              actionLabel="Create Workout"
+              onAction={() => router.push('/create-workout')}
+            />
+          ) : (
+            <FlatList
+              data={workouts}
+              renderItem={renderWorkoutItem}
+              keyExtractor={item => item.id.toString()}
+              contentContainerStyle={styles.listContainer}
+              showsVerticalScrollIndicator={false}
+            />
           )}
-          contentContainerStyle={styles.listContainer}
-        />
+        </>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#3498db',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  addButtonText: {
-    color: '#fff',
-    marginLeft: 5,
-    fontWeight: 'bold',
+  headerTitle: {
+    fontSize: typography.fontSizes.xl,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
   },
   listContainer: {
-    padding: 16,
+    padding: spacing.md,
+    paddingTop: 0,
   },
   workoutCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: spacing.md,
+  },
+  workoutCardContent: {
+    width: '100%',
   },
   workoutHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   workoutName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: typography.fontSizes.lg,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
     flex: 1,
-  },
-  difficultyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  beginnerBadge: {
-    backgroundColor: '#e8f5e9',
-  },
-  intermediateBadge: {
-    backgroundColor: '#fff8e1',
-  },
-  advancedBadge: {
-    backgroundColor: '#ffebee',
-  },
-  difficultyText: {
-    fontSize: 12,
-    fontWeight: 'bold',
   },
   workoutDescription: {
-    color: '#666',
-    marginBottom: 12,
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
+    marginBottom: spacing.sm,
   },
-  workoutFooter: {
+  workoutDetails: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: spacing.md,
   },
-  workoutStat: {
+  workoutDetail: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: spacing.md,
   },
-  workoutStatText: {
-    marginLeft: 4,
-    color: '#666',
-    fontSize: 14,
+  detailIcon: {
+    marginRight: spacing.xs,
   },
-  workoutDate: {
-    color: '#999',
-    fontSize: 12,
+  detailText: {
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+  workoutActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  emptySubText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  createButton: {
-    backgroundColor: '#3498db',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  startButton: {
+    minWidth: 100,
   },
 });

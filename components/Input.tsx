@@ -1,123 +1,91 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { colors, typography, spacing, borderRadius, commonStyles } from '../lib/styles';
+import { colors, typography, spacing, borderRadius } from '../lib/styles';
 
-// Input variants
-export type InputVariant = 'default' | 'filled' | 'outline';
-
-// Input props
-interface InputProps {
+type InputProps = {
   label?: string;
-  placeholder?: string;
   value: string;
   onChangeText: (text: string) => void;
-  variant?: InputVariant;
-  error?: string;
+  placeholder?: string;
+  secureTextEntry?: boolean;
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'number-pad';
   multiline?: boolean;
   numberOfLines?: number;
-  secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  error?: string;
+  disabled?: boolean;
+  style?: any;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  editable?: boolean;
-}
+};
 
-export const Input: React.FC<InputProps> = ({
+export default function Input({
   label,
-  placeholder,
   value,
   onChangeText,
-  variant = 'default',
-  error,
-  multiline = false,
-  numberOfLines = 1,
+  placeholder,
   secureTextEntry = false,
   keyboardType = 'default',
-  autoCapitalize = 'sentences',
-  editable = true,
-}) => {
-  // Get input style based on variant
-  const getInputStyle = () => {
-    switch (variant) {
-      case 'filled':
-        return styles.filledInput;
-      case 'outline':
-        return styles.outlineInput;
-      default:
-        return styles.defaultInput;
-    }
-  };
-
+  multiline = false,
+  numberOfLines = 1,
+  error,
+  disabled = false,
+  style,
+  autoCapitalize = 'none',
+}: InputProps) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
         style={[
           styles.input,
-          getInputStyle(),
-          multiline && styles.multilineInput,
-          error && styles.errorInput,
-          !editable && styles.disabledInput,
+          multiline && { height: numberOfLines * 24, textAlignVertical: 'top' },
+          error && styles.inputError,
+          disabled && styles.inputDisabled,
         ]}
-        placeholder={placeholder}
         value={value}
         onChangeText={onChangeText}
-        multiline={multiline}
-        numberOfLines={multiline ? numberOfLines : 1}
+        placeholder={placeholder}
+        placeholderTextColor={colors.lightGray}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
+        multiline={multiline}
+        numberOfLines={numberOfLines}
+        editable={!disabled}
         autoCapitalize={autoCapitalize}
-        editable={editable}
-        placeholderTextColor={colors.textMuted}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.md,
   },
   label: {
-    fontSize: typography.fontSizeRegular,
-    fontWeight: typography.fontWeightMedium,
-    color: colors.text,
+    fontSize: typography.fontSizes.sm,
+    fontWeight: typography.fontWeights.medium,
+    color: colors.dark,
     marginBottom: spacing.xs,
   },
   input: {
-    fontSize: typography.fontSizeRegular,
-    color: colors.text,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  defaultInput: {
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: typography.fontSizes.md,
+    color: colors.dark,
   },
-  filledInput: {
-    backgroundColor: '#f0f0f0',
+  inputError: {
+    borderColor: colors.danger,
   },
-  outlineInput: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  multilineInput: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  errorInput: {
-    borderColor: colors.error,
-  },
-  disabledInput: {
-    backgroundColor: '#f5f5f5',
-    color: colors.textMuted,
+  inputDisabled: {
+    backgroundColor: colors.border,
+    color: colors.lightGray,
   },
   errorText: {
-    color: colors.error,
-    fontSize: typography.fontSizeSmall,
+    fontSize: typography.fontSizes.sm,
+    color: colors.danger,
     marginTop: spacing.xs,
   },
 });

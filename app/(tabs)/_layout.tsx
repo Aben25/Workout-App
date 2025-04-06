@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { useSupabase } from '../../lib/SupabaseContext';
+import { useSupabase } from '../lib/SupabaseContext';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
+import { colors, typography } from '../lib/styles';
 
 export default function TabLayout() {
   const supabase = useSupabase();
@@ -13,7 +15,7 @@ export default function TabLayout() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
         // Redirect to login if no session
-        router.replace('/(auth)/login');
+        router.replace('/login');
       }
     };
     
@@ -22,7 +24,7 @@ export default function TabLayout() {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        router.replace('/(auth)/login');
+        router.replace('/login');
       }
     });
     
@@ -32,7 +34,34 @@ export default function TabLayout() {
   }, []);
 
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.gray,
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          height: 60,
+          paddingBottom: 5,
+          paddingTop: 5,
+        },
+        tabBarLabelStyle: {
+          fontSize: typography.fontSizes.xs,
+          fontWeight: typography.fontWeights.medium,
+        },
+        headerStyle: {
+          backgroundColor: colors.card,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        headerTitleStyle: {
+          fontWeight: typography.fontWeights.bold,
+          fontSize: typography.fontSizes.lg,
+          color: colors.dark,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -59,6 +88,13 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <FontAwesome name="user" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: 'Explore',
+          tabBarIcon: ({ color }) => <FontAwesome name="compass" size={24} color={color} />,
         }}
       />
     </Tabs>

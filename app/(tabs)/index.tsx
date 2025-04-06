@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions } from 'react-native';
-import { useSupabase } from '../../lib/SupabaseContext';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useSupabase } from '../lib/SupabaseContext';
 import { LineChart } from 'react-native-chart-kit';
-import { UserProgress, WorkoutLog } from '../../lib/database.types';
+import { Dimensions } from 'react-native';
+import { UserProgress, WorkoutLog } from '../lib/database.types';
+import { colors, typography, spacing, commonStyles } from '../lib/styles';
+import Card from '../components/Card';
+import { SectionHeader } from '../components/Navigation';
+import { FontAwesome } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
@@ -104,8 +110,10 @@ export default function DashboardScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3498db" />
+      <View style={commonStyles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </View>
     );
   }
@@ -127,75 +135,69 @@ export default function DashboardScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Dashboard</Text>
-      </View>
-      
+    <ScrollView style={commonStyles.container}>
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{workoutStats.totalWorkouts}</Text>
-          <Text style={styles.statLabel}>Total Workouts</Text>
-        </View>
+        <Card style={styles.statCard}>
+          <Text style={commonStyles.statValue}>{workoutStats.totalWorkouts}</Text>
+          <Text style={commonStyles.statLabel}>Total Workouts</Text>
+        </Card>
         
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{workoutStats.thisWeek}</Text>
-          <Text style={styles.statLabel}>This Week</Text>
-        </View>
+        <Card style={styles.statCard}>
+          <Text style={commonStyles.statValue}>{workoutStats.thisWeek}</Text>
+          <Text style={commonStyles.statLabel}>This Week</Text>
+        </Card>
         
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{workoutStats.thisMonth}</Text>
-          <Text style={styles.statLabel}>This Month</Text>
-        </View>
+        <Card style={styles.statCard}>
+          <Text style={commonStyles.statValue}>{workoutStats.thisMonth}</Text>
+          <Text style={commonStyles.statLabel}>This Month</Text>
+        </Card>
         
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{workoutStats.avgDuration}</Text>
-          <Text style={styles.statLabel}>Avg. Minutes</Text>
-        </View>
+        <Card style={styles.statCard}>
+          <Text style={commonStyles.statValue}>{workoutStats.avgDuration}</Text>
+          <Text style={commonStyles.statLabel}>Avg. Minutes</Text>
+        </Card>
       </View>
       
-      {progressData.length > 0 ? (
-        <View style={styles.chartContainer}>
-          <Text style={styles.sectionTitle}>Weight Progress</Text>
+      <Card title="Weight Progress">
+        {progressData.length > 0 ? (
           <LineChart
             data={weightData}
-            width={screenWidth - 40}
+            width={screenWidth - 50}
             height={220}
             chartConfig={{
-              backgroundColor: '#fff',
-              backgroundGradientFrom: '#fff',
-              backgroundGradientTo: '#fff',
+              backgroundColor: colors.card,
+              backgroundGradientFrom: colors.card,
+              backgroundGradientTo: colors.card,
               decimalPlaces: 1,
               color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              labelColor: (opacity = 1) => colors.dark,
               style: {
                 borderRadius: 16
               },
               propsForDots: {
                 r: "6",
                 strokeWidth: "2",
-                stroke: "#3498db"
+                stroke: colors.primary
               }
             }}
             bezier
             style={styles.chart}
           />
-        </View>
-      ) : (
-        <View style={styles.emptyChartContainer}>
-          <Text style={styles.sectionTitle}>Weight Progress</Text>
-          <Text style={styles.emptyText}>No weight data recorded yet</Text>
-        </View>
-      )}
+        ) : (
+          <Text style={commonStyles.emptyState}>No weight data recorded yet</Text>
+        )}
+      </Card>
       
-      <View style={styles.recentWorkoutsContainer}>
-        <Text style={styles.sectionTitle}>Recent Workouts</Text>
-        
+      <Card title="Recent Workouts">
         {recentWorkouts.length === 0 ? (
-          <Text style={styles.emptyText}>No workouts completed yet</Text>
+          <Text style={commonStyles.emptyState}>No workouts completed yet</Text>
         ) : (
           recentWorkouts.map((workout) => (
-            <View key={workout.id} style={styles.workoutItem}>
+            <TouchableOpacity 
+              key={workout.id} 
+              style={styles.workoutItem}
+              onPress={() => router.push(`/workout/${workout.workout_id}`)}
+            >
               <View style={styles.workoutHeader}>
                 <Text style={styles.workoutName}>{workout.workout?.name || 'Unnamed Workout'}</Text>
                 <Text style={styles.workoutDate}>
@@ -206,14 +208,14 @@ export default function DashboardScreen() {
               <View style={styles.workoutDetails}>
                 {workout.duration && (
                   <View style={styles.workoutDetail}>
-                    <Text style={styles.detailLabel}>Duration</Text>
+                    <FontAwesome name="clock-o" size={14} color={colors.gray} style={styles.detailIcon} />
                     <Text style={styles.detailValue}>{workout.duration} min</Text>
                   </View>
                 )}
                 
                 {workout.workout?.difficulty && (
                   <View style={styles.workoutDetail}>
-                    <Text style={styles.detailLabel}>Difficulty</Text>
+                    <FontAwesome name="signal" size={14} color={colors.gray} style={styles.detailIcon} />
                     <Text style={styles.detailValue}>
                       {workout.workout.difficulty.charAt(0).toUpperCase() + workout.workout.difficulty.slice(1)}
                     </Text>
@@ -222,150 +224,75 @@ export default function DashboardScreen() {
                 
                 {workout.rating && (
                   <View style={styles.workoutDetail}>
-                    <Text style={styles.detailLabel}>Rating</Text>
+                    <FontAwesome name="star" size={14} color={colors.gray} style={styles.detailIcon} />
                     <Text style={styles.detailValue}>{workout.rating}/5</Text>
                   </View>
                 )}
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
-      </View>
+      </Card>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
   statsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    padding: 10,
-    marginBottom: 10,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
   },
   statCard: {
     width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#3498db',
-    marginBottom: 5,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  chartContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    margin: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  emptyChartContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    margin: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: spacing.md,
+    padding: spacing.md,
   },
   chart: {
-    marginVertical: 8,
+    marginVertical: spacing.sm,
     borderRadius: 16,
   },
-  emptyText: {
-    fontSize: 16,
-    color: '#999',
-    textAlign: 'center',
-    marginVertical: 20,
-  },
-  recentWorkoutsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    margin: 10,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
   workoutItem: {
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingVertical: 15,
+    borderBottomColor: colors.border,
   },
   workoutHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   workoutName: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: typography.fontSizes.md,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
   },
   workoutDate: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
   },
   workoutDetails: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   workoutDetail: {
-    marginRight: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: spacing.md,
   },
-  detailLabel: {
-    fontSize: 12,
-    color: '#999',
+  detailIcon: {
+    marginRight: spacing.xs,
   },
   detailValue: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
   },
 });

@@ -1,126 +1,118 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors, typography, spacing, borderRadius } from '../lib/styles';
 
-// Progress bar variants
-export type ProgressBarVariant = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
-
-// Progress bar props
-interface ProgressBarProps {
+type ProgressProps = {
   progress: number; // 0 to 1
-  variant?: ProgressBarVariant;
   height?: number;
+  width?: number | string;
+  color?: string;
+  backgroundColor?: string;
   showPercentage?: boolean;
-  label?: string;
-}
+  style?: any;
+};
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({
+export default function Progress({
   progress,
-  variant = 'primary',
-  height = 10,
+  height = 8,
+  width = '100%',
+  color = colors.primary,
+  backgroundColor = colors.border,
   showPercentage = false,
-  label,
-}) => {
+  style,
+}: ProgressProps) {
   // Ensure progress is between 0 and 1
   const normalizedProgress = Math.min(Math.max(progress, 0), 1);
   
-  // Get progress bar color based on variant
-  const getProgressColor = () => {
-    switch (variant) {
-      case 'primary':
-        return colors.primary;
-      case 'secondary':
-        return colors.secondary;
-      case 'success':
-        return colors.success;
-      case 'warning':
-        return colors.warning;
-      case 'danger':
-        return colors.danger;
-      default:
-        return colors.primary;
-    }
-  };
+  // Calculate percentage
+  const percentage = Math.round(normalizedProgress * 100);
 
   return (
-    <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.progressContainer, { height }]}>
+    <View style={[styles.container, style]}>
+      <View 
+        style={[
+          styles.progressBar, 
+          { 
+            height, 
+            width, 
+            backgroundColor 
+          }
+        ]}
+      >
         <View 
           style={[
-            styles.progressFill, 
+            styles.progress, 
             { 
-              width: `${normalizedProgress * 100}%`,
-              backgroundColor: getProgressColor(),
-              height
+              width: `${percentage}%`, 
+              height: '100%', 
+              backgroundColor: color 
             }
-          ]} 
+          ]}
         />
       </View>
       {showPercentage && (
-        <Text style={styles.percentage}>{Math.round(normalizedProgress * 100)}%</Text>
+        <Text style={styles.percentageText}>{percentage}%</Text>
       )}
     </View>
   );
-};
-
-// Loading spinner props
-interface LoadingSpinnerProps {
-  size?: 'small' | 'large';
-  color?: string;
-  text?: string;
-  fullScreen?: boolean;
 }
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = 'large',
-  color = colors.primary,
-  text,
-  fullScreen = false,
-}) => {
+// Workout completion progress component
+export function WorkoutProgress({ 
+  completed, 
+  total, 
+  style 
+}: { 
+  completed: number; 
+  total: number; 
+  style?: any; 
+}) {
+  const progress = total > 0 ? completed / total : 0;
+  
   return (
-    <View style={[styles.spinnerContainer, fullScreen && styles.fullScreen]}>
-      <ActivityIndicator size={size} color={color} />
-      {text && <Text style={styles.spinnerText}>{text}</Text>}
+    <View style={[styles.workoutProgressContainer, style]}>
+      <View style={styles.workoutProgressHeader}>
+        <Text style={styles.workoutProgressTitle}>Progress</Text>
+        <Text style={styles.workoutProgressCount}>{completed}/{total}</Text>
+      </View>
+      <Progress progress={progress} height={10} />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: spacing.sm,
+    width: '100%',
   },
-  label: {
-    fontSize: typography.fontSizeRegular,
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  progressContainer: {
-    backgroundColor: colors.border,
+  progressBar: {
     borderRadius: borderRadius.round,
     overflow: 'hidden',
   },
-  progressFill: {
+  progress: {
     borderRadius: borderRadius.round,
   },
-  percentage: {
-    fontSize: typography.fontSizeSmall,
-    color: colors.textLight,
+  percentageText: {
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
     marginTop: spacing.xs,
     textAlign: 'right',
   },
-  spinnerContainer: {
+  workoutProgressContainer: {
+    marginVertical: spacing.md,
+  },
+  workoutProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.md,
+    marginBottom: spacing.xs,
   },
-  fullScreen: {
-    flex: 1,
-    backgroundColor: colors.background,
+  workoutProgressTitle: {
+    fontSize: typography.fontSizes.md,
+    fontWeight: typography.fontWeights.medium,
+    color: colors.dark,
   },
-  spinnerText: {
-    marginTop: spacing.sm,
-    fontSize: typography.fontSizeRegular,
-    color: colors.textLight,
+  workoutProgressCount: {
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
   },
 });

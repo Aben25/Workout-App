@@ -1,257 +1,230 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { colors, typography, spacing, borderRadius, shadows } from '../lib/styles';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { colors, typography, spacing, borderRadius, shadows } from '../lib/styles';
 
-// Tab item interface
-interface TabItem {
-  key: string;
+type NavigationItemProps = {
   label: string;
-  icon?: string;
-}
-
-// Tab bar props
-interface TabBarProps {
-  tabs: TabItem[];
-  activeTab: string;
-  onTabChange: (tabKey: string) => void;
-  variant?: 'default' | 'pills' | 'underlined';
-}
-
-export const TabBar: React.FC<TabBarProps> = ({
-  tabs,
-  activeTab,
-  onTabChange,
-  variant = 'default',
-}) => {
-  // Get tab style based on variant
-  const getTabStyle = (isActive: boolean) => {
-    switch (variant) {
-      case 'pills':
-        return isActive ? styles.activePillTab : styles.inactivePillTab;
-      case 'underlined':
-        return isActive ? styles.activeUnderlinedTab : styles.inactiveUnderlinedTab;
-      default:
-        return isActive ? styles.activeTab : styles.inactiveTab;
-    }
-  };
-
-  // Get text style based on active state
-  const getTextStyle = (isActive: boolean) => {
-    return isActive ? styles.activeTabText : styles.inactiveTabText;
-  };
-
-  return (
-    <View style={styles.container}>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {tabs.map((tab) => {
-          const isActive = tab.key === activeTab;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, getTabStyle(isActive)]}
-              onPress={() => onTabChange(tab.key)}
-            >
-              {tab.icon && (
-                <FontAwesome
-                  name={tab.icon}
-                  size={16}
-                  color={isActive ? colors.primary : colors.textLight}
-                  style={styles.tabIcon}
-                />
-              )}
-              <Text style={getTextStyle(isActive)}>{tab.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-    </View>
-  );
+  icon: string;
+  isActive?: boolean;
+  onPress: () => void;
 };
 
-// List item props
-interface ListItemProps {
-  title: string;
-  subtitle?: string;
-  leftIcon?: string;
-  rightIcon?: string;
-  onPress?: () => void;
-  showDivider?: boolean;
-}
-
-export const ListItem: React.FC<ListItemProps> = ({
-  title,
-  subtitle,
-  leftIcon,
-  rightIcon = 'chevron-right',
-  onPress,
-  showDivider = true,
-}) => {
+export function NavigationItem({ label, icon, isActive = false, onPress }: NavigationItemProps) {
   return (
-    <TouchableOpacity
-      style={[styles.listItem, showDivider && styles.listItemDivider]}
+    <TouchableOpacity 
+      style={styles.navItem} 
       onPress={onPress}
-      disabled={!onPress}
+      activeOpacity={0.7}
     >
-      {leftIcon && (
-        <View style={styles.leftIconContainer}>
-          <FontAwesome name={leftIcon} size={20} color={colors.primary} />
-        </View>
-      )}
-      <View style={styles.listItemContent}>
-        <Text style={styles.listItemTitle}>{title}</Text>
-        {subtitle && <Text style={styles.listItemSubtitle}>{subtitle}</Text>}
-      </View>
-      {rightIcon && onPress && (
-        <FontAwesome name={rightIcon} size={16} color={colors.textLight} />
-      )}
+      <FontAwesome 
+        name={icon} 
+        size={24} 
+        color={isActive ? colors.primary : colors.gray} 
+      />
+      <Text 
+        style={[
+          styles.navLabel,
+          isActive && styles.activeNavLabel
+        ]}
+      >
+        {label}
+      </Text>
     </TouchableOpacity>
   );
-};
-
-// Empty state props
-interface EmptyStateProps {
-  title: string;
-  message?: string;
-  icon?: string;
-  buttonText?: string;
-  onButtonPress?: () => void;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
-  title,
-  message,
-  icon = 'inbox',
-  buttonText,
-  onButtonPress,
-}) => {
+type EmptyStateProps = {
+  icon: string;
+  title: string;
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+};
+
+export function EmptyState({ icon, title, message, actionLabel, onAction }: EmptyStateProps) {
   return (
     <View style={styles.emptyStateContainer}>
-      <FontAwesome name={icon} size={50} color={colors.textLight} style={styles.emptyStateIcon} />
+      <FontAwesome name={icon} size={48} color={colors.lightGray} />
       <Text style={styles.emptyStateTitle}>{title}</Text>
-      {message && <Text style={styles.emptyStateMessage}>{message}</Text>}
-      {buttonText && onButtonPress && (
-        <TouchableOpacity style={styles.emptyStateButton} onPress={onButtonPress}>
-          <Text style={styles.emptyStateButtonText}>{buttonText}</Text>
+      <Text style={styles.emptyStateMessage}>{message}</Text>
+      {actionLabel && onAction && (
+        <TouchableOpacity style={styles.emptyStateAction} onPress={onAction}>
+          <Text style={styles.emptyStateActionText}>{actionLabel}</Text>
         </TouchableOpacity>
       )}
     </View>
   );
+}
+
+type ListItemProps = {
+  title: string;
+  subtitle?: string;
+  rightText?: string;
+  icon?: string;
+  onPress?: () => void;
+  rightIcon?: string;
+  onRightIconPress?: () => void;
 };
 
+export function ListItem({ 
+  title, 
+  subtitle, 
+  rightText, 
+  icon, 
+  onPress, 
+  rightIcon,
+  onRightIconPress
+}: ListItemProps) {
+  return (
+    <TouchableOpacity 
+      style={styles.listItem}
+      onPress={onPress}
+      disabled={!onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
+      <View style={styles.listItemContent}>
+        {icon && (
+          <View style={styles.listItemIconContainer}>
+            <FontAwesome name={icon} size={20} color={colors.primary} />
+          </View>
+        )}
+        <View style={styles.listItemTextContainer}>
+          <Text style={styles.listItemTitle}>{title}</Text>
+          {subtitle && <Text style={styles.listItemSubtitle}>{subtitle}</Text>}
+        </View>
+        <View style={styles.listItemRight}>
+          {rightText && <Text style={styles.listItemRightText}>{rightText}</Text>}
+          {rightIcon && (
+            <TouchableOpacity 
+              onPress={onRightIconPress} 
+              disabled={!onRightIconPress}
+              hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+            >
+              <FontAwesome name={rightIcon} size={16} color={colors.gray} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+type SectionHeaderProps = {
+  title: string;
+  rightText?: string;
+  onRightTextPress?: () => void;
+};
+
+export function SectionHeader({ title, rightText, onRightTextPress }: SectionHeaderProps) {
+  return (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderTitle}>{title}</Text>
+      {rightText && (
+        <TouchableOpacity onPress={onRightTextPress} disabled={!onRightTextPress}>
+          <Text style={styles.sectionHeaderRight}>{rightText}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.card,
-    ...shadows.small,
-  },
-  scrollContent: {
-    flexDirection: 'row',
-  },
-  tab: {
-    flexDirection: 'row',
+  // Navigation Item
+  navItem: {
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    justifyContent: 'center',
+    paddingVertical: spacing.xs,
   },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
+  navLabel: {
+    fontSize: typography.fontSizes.xs,
+    color: colors.gray,
+    marginTop: spacing.xs / 2,
   },
-  inactiveTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activePillTab: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.round,
-    marginHorizontal: spacing.xs,
-  },
-  inactivePillTab: {
-    backgroundColor: 'transparent',
-    borderRadius: borderRadius.round,
-    marginHorizontal: spacing.xs,
-  },
-  activeUnderlinedTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
-  },
-  inactiveUnderlinedTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activeTabText: {
+  activeNavLabel: {
     color: colors.primary,
-    fontWeight: typography.fontWeightBold,
-    fontSize: typography.fontSizeRegular,
+    fontWeight: typography.fontWeights.medium,
   },
-  inactiveTabText: {
-    color: colors.textLight,
-    fontSize: typography.fontSizeRegular,
-  },
-  tabIcon: {
-    marginRight: spacing.xs,
-  },
-  listItem: {
-    flexDirection: 'row',
+  
+  // Empty State
+  emptyStateContainer: {
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.card,
+    justifyContent: 'center',
+    padding: spacing.xl,
   },
-  listItemDivider: {
+  emptyStateTitle: {
+    fontSize: typography.fontSizes.lg,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  emptyStateMessage: {
+    fontSize: typography.fontSizes.md,
+    color: colors.gray,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  emptyStateAction: {
+    marginTop: spacing.md,
+  },
+  emptyStateActionText: {
+    fontSize: typography.fontSizes.md,
+    color: colors.primary,
+    fontWeight: typography.fontWeights.medium,
+  },
+  
+  // List Item
+  listItem: {
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  leftIconContainer: {
+  listItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  listItemIconContainer: {
     marginRight: spacing.md,
   },
-  listItemContent: {
+  listItemTextContainer: {
     flex: 1,
   },
   listItemTitle: {
-    fontSize: typography.fontSizeMedium,
-    color: colors.text,
-    fontWeight: typography.fontWeightMedium,
+    fontSize: typography.fontSizes.md,
+    fontWeight: typography.fontWeights.medium,
+    color: colors.dark,
   },
   listItemSubtitle: {
-    fontSize: typography.fontSizeRegular,
-    color: colors.textLight,
-    marginTop: spacing.xs,
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
+    marginTop: spacing.xs / 2,
   },
-  emptyStateContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  listItemRight: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.xl,
   },
-  emptyStateIcon: {
-    marginBottom: spacing.md,
+  listItemRightText: {
+    fontSize: typography.fontSizes.sm,
+    color: colors.gray,
+    marginRight: spacing.sm,
   },
-  emptyStateTitle: {
-    fontSize: typography.fontSizeLarge,
-    fontWeight: typography.fontWeightBold,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  emptyStateMessage: {
-    fontSize: typography.fontSizeRegular,
-    color: colors.textLight,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  emptyStateButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.sm,
+  
+  // Section Header
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
   },
-  emptyStateButtonText: {
-    color: colors.card,
-    fontWeight: typography.fontWeightMedium,
+  sectionHeaderTitle: {
+    fontSize: typography.fontSizes.lg,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
+  },
+  sectionHeaderRight: {
+    fontSize: typography.fontSizes.sm,
+    color: colors.primary,
   },
 });

@@ -1,23 +1,30 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { useSupabase } from '../../lib/SupabaseContext';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useSupabase } from '../lib/SupabaseContext';
+import { colors, typography, spacing, commonStyles } from '../lib/styles';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import Card from '../components/Card';
 
-export default function Login() {
+export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
   const supabase = useSupabase();
-
+  
   async function handleLogin() {
-    if (email === '' || password === '') {
-      Alert.alert('Error', 'Please fill in all fields');
+    if (!email || !password) {
+      setError('Please enter both email and password');
       return;
     }
     
-    setLoading(true);
-    
     try {
+      setLoading(true);
+      setError('');
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -25,112 +32,129 @@ export default function Login() {
       
       if (error) throw error;
       
-      // Navigate to the main app after successful login
-      router.replace('/(tabs)');
+      // Navigation will be handled by the auth state change listener in _layout.tsx
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.error('Error logging in:', error);
+      setError(error.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }
   }
-
-  function navigateToSignUp() {
-    router.push('/signup');
-  }
-
+  
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.logoContainer}>
+        <Text style={styles.logoText}>Workout Tracker</Text>
+      </View>
       
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="email@example.com"
+      <Card style={styles.formCard}>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Sign in to continue tracking your fitness journey</Text>
+        
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        
+        <Input
+          label="Email"
           value={email}
           onChangeText={setEmail}
-          autoCapitalize="none"
+          placeholder="Enter your email"
           keyboardType="email-address"
+          autoCapitalize="none"
         />
-      </View>
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
+        
+        <Input
+          label="Password"
           value={password}
           onChangeText={setPassword}
+          placeholder="Enter your password"
           secureTextEntry
         />
+        
+        <Button
+          title={loading ? "Signing In..." : "Sign In"}
+          onPress={handleLogin}
+          disabled={loading}
+          fullWidth
+          style={styles.loginButton}
+        />
+        
+        <TouchableOpacity 
+          style={styles.forgotPasswordContainer}
+          onPress={() => Alert.alert('Reset Password', 'Password reset functionality will be available soon.')}
+        >
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        </TouchableOpacity>
+      </Card>
+      
+      <View style={styles.signupContainer}>
+        <Text style={styles.signupText}>Don't have an account?</Text>
+        <TouchableOpacity onPress={() => router.push('/signup')}>
+          <Text style={styles.signupLink}>Create Account</Text>
+        </TouchableOpacity>
       </View>
-      
-      <TouchableOpacity 
-        style={styles.button}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Log In</Text>
-        )}
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={styles.linkButton}
-        onPress={navigateToSignUp}
-      >
-        <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  contentContainer: {
+    padding: spacing.md,
+    paddingTop: spacing.xl,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  logoText: {
+    fontSize: typography.fontSizes.xxxl,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.primary,
+  },
+  formCard: {
+    padding: spacing.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 30,
-    textAlign: 'center',
+    fontSize: typography.fontSizes.xxl,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
+    marginBottom: spacing.xs,
   },
-  inputContainer: {
-    marginBottom: 20,
+  subtitle: {
+    fontSize: typography.fontSizes.md,
+    color: colors.gray,
+    marginBottom: spacing.lg,
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 8,
+  errorText: {
+    color: colors.danger,
+    marginBottom: spacing.md,
+    fontSize: typography.fontSizes.sm,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+  loginButton: {
+    marginTop: spacing.md,
   },
-  button: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 8,
+  forgotPasswordContainer: {
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: spacing.md,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  forgotPasswordText: {
+    color: colors.primary,
+    fontSize: typography.fontSizes.sm,
   },
-  linkButton: {
-    marginTop: 20,
-    alignItems: 'center',
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: spacing.xl,
   },
-  linkText: {
-    color: '#3498db',
-    fontSize: 16,
+  signupText: {
+    color: colors.gray,
+    marginRight: spacing.xs,
+  },
+  signupLink: {
+    color: colors.primary,
+    fontWeight: typography.fontWeights.medium,
   },
 });

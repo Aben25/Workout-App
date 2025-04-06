@@ -1,251 +1,131 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, typography, spacing, borderRadius, difficultyStyles, muscleGroupStyles } from '../lib/styles';
-import { FontAwesome } from '@expo/vector-icons';
+import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography, spacing, borderRadius } from '../lib/styles';
 
-// Badge variants
-export type BadgeVariant = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
-
-// Badge sizes
-export type BadgeSize = 'small' | 'medium' | 'large';
-
-// Badge props
-interface BadgeProps {
+type BadgeProps = {
   text: string;
-  variant?: BadgeVariant;
-  size?: BadgeSize;
-  icon?: string;
-  onPress?: () => void;
-}
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+  size?: 'small' | 'medium' | 'large';
+  style?: any;
+};
 
-export const Badge: React.FC<BadgeProps> = ({
-  text,
-  variant = 'default',
-  size = 'medium',
-  icon,
-  onPress,
-}) => {
-  // Get badge style based on variant
-  const getBadgeStyle = () => {
+export default function Badge({ text, variant = 'primary', size = 'medium', style }: BadgeProps) {
+  // Get background color based on variant
+  const getBackgroundColor = () => {
     switch (variant) {
       case 'primary':
-        return styles.primaryBadge;
+        return colors.primary;
       case 'secondary':
-        return styles.secondaryBadge;
+        return colors.secondary;
       case 'success':
-        return styles.successBadge;
+        return colors.secondary;
       case 'warning':
-        return styles.warningBadge;
+        return colors.warning;
       case 'danger':
-        return styles.dangerBadge;
+        return colors.danger;
       case 'info':
-        return styles.infoBadge;
+        return colors.accent;
       default:
-        return styles.defaultBadge;
+        return colors.primary;
     }
   };
 
-  // Get text style based on variant
-  const getTextStyle = () => {
-    switch (variant) {
-      case 'primary':
-        return styles.primaryText;
-      case 'secondary':
-        return styles.secondaryText;
-      case 'success':
-        return styles.successText;
-      case 'warning':
-        return styles.warningText;
-      case 'danger':
-        return styles.dangerText;
-      case 'info':
-        return styles.infoText;
-      default:
-        return styles.defaultText;
-    }
+  // Get text color (always white for now, but could be customized)
+  const getTextColor = () => {
+    return '#ffffff';
   };
 
-  // Get badge size style
-  const getSizeStyle = () => {
+  // Get padding based on size
+  const getPadding = () => {
     switch (size) {
       case 'small':
-        return styles.smallBadge;
+        return { paddingVertical: spacing.xs / 2, paddingHorizontal: spacing.sm };
       case 'large':
-        return styles.largeBadge;
+        return { paddingVertical: spacing.sm, paddingHorizontal: spacing.md };
       default:
-        return styles.mediumBadge;
+        return { paddingVertical: spacing.xs, paddingHorizontal: spacing.sm };
     }
   };
 
-  // Get text size style
-  const getTextSizeStyle = () => {
+  // Get font size based on size
+  const getFontSize = () => {
     switch (size) {
       case 'small':
-        return styles.smallText;
+        return typography.fontSizes.xs;
       case 'large':
-        return styles.largeText;
+        return typography.fontSizes.md;
       default:
-        return styles.mediumText;
+        return typography.fontSizes.sm;
     }
   };
-
-  // Get icon size based on badge size
-  const getIconSize = () => {
-    switch (size) {
-      case 'small':
-        return 10;
-      case 'large':
-        return 16;
-      default:
-        return 12;
-    }
-  };
-
-  const BadgeComponent = onPress ? TouchableOpacity : View;
 
   return (
-    <BadgeComponent
-      style={[styles.badge, getBadgeStyle(), getSizeStyle()]}
-      onPress={onPress}
-      disabled={!onPress}
+    <View
+      style={[
+        styles.badge,
+        { backgroundColor: getBackgroundColor() },
+        getPadding(),
+        style,
+      ]}
     >
-      {icon && (
-        <FontAwesome
-          name={icon}
-          size={getIconSize()}
-          color={getTextStyle().color}
-          style={styles.icon}
-        />
-      )}
-      <Text style={[styles.text, getTextStyle(), getTextSizeStyle()]}>{text}</Text>
-    </BadgeComponent>
-  );
-};
-
-// Difficulty badge component
-interface DifficultyBadgeProps {
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  size?: BadgeSize;
-}
-
-export const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ difficulty, size = 'medium' }) => {
-  const style = difficultyStyles[difficulty];
-  
-  return (
-    <View style={[
-      styles.badge,
-      { backgroundColor: style.backgroundColor },
-      size === 'small' ? styles.smallBadge : size === 'large' ? styles.largeBadge : styles.mediumBadge
-    ]}>
-      <Text style={[
-        styles.text,
-        { color: style.color },
-        size === 'small' ? styles.smallText : size === 'large' ? styles.largeText : styles.mediumText
-      ]}>
-        {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+      <Text
+        style={[
+          styles.text,
+          { color: getTextColor(), fontSize: getFontSize() },
+        ]}
+      >
+        {text}
       </Text>
     </View>
   );
-};
-
-// Muscle group badge component
-interface MuscleGroupBadgeProps {
-  muscleGroup: 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core' | 'cardio';
-  size?: BadgeSize;
 }
 
-export const MuscleGroupBadge: React.FC<MuscleGroupBadgeProps> = ({ muscleGroup, size = 'medium' }) => {
-  const style = muscleGroupStyles[muscleGroup];
-  
+// Badge specifically for workout difficulty
+export function DifficultyBadge({ difficulty }: { difficulty: string }) {
+  const getVariant = () => {
+    switch (difficulty.toLowerCase()) {
+      case 'beginner':
+        return 'success';
+      case 'intermediate':
+        return 'warning';
+      case 'advanced':
+        return 'danger';
+      default:
+        return 'info';
+    }
+  };
+
   return (
-    <View style={[
-      styles.badge,
-      { backgroundColor: style.backgroundColor },
-      size === 'small' ? styles.smallBadge : size === 'large' ? styles.largeBadge : styles.mediumBadge
-    ]}>
-      <Text style={[
-        styles.text,
-        { color: style.color },
-        size === 'small' ? styles.smallText : size === 'large' ? styles.largeText : styles.mediumText
-      ]}>
-        {muscleGroup.charAt(0).toUpperCase() + muscleGroup.slice(1)}
-      </Text>
-    </View>
+    <Badge
+      text={difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+      variant={getVariant()}
+      size="small"
+    />
   );
-};
+}
+
+// Badge specifically for muscle groups
+export function MuscleGroupBadge({ muscleGroup }: { muscleGroup: string }) {
+  return (
+    <Badge
+      text={muscleGroup}
+      variant="info"
+      size="small"
+      style={styles.muscleGroupBadge}
+    />
+  );
+}
 
 const styles = StyleSheet.create({
   badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     borderRadius: borderRadius.round,
-    paddingHorizontal: spacing.sm,
-  },
-  smallBadge: {
-    paddingVertical: 2,
-  },
-  mediumBadge: {
-    paddingVertical: 4,
-  },
-  largeBadge: {
-    paddingVertical: 6,
-  },
-  defaultBadge: {
-    backgroundColor: colors.border,
-  },
-  primaryBadge: {
-    backgroundColor: '#e3f2fd',
-  },
-  secondaryBadge: {
-    backgroundColor: '#e8f5e9',
-  },
-  successBadge: {
-    backgroundColor: '#e8f5e9',
-  },
-  warningBadge: {
-    backgroundColor: '#fff8e1',
-  },
-  dangerBadge: {
-    backgroundColor: '#ffebee',
-  },
-  infoBadge: {
-    backgroundColor: '#e3f2fd',
+    alignSelf: 'flex-start',
   },
   text: {
-    fontWeight: typography.fontWeightMedium,
+    fontWeight: typography.fontWeights.medium,
   },
-  smallText: {
-    fontSize: 10,
-  },
-  mediumText: {
-    fontSize: 12,
-  },
-  largeText: {
-    fontSize: 14,
-  },
-  defaultText: {
-    color: colors.textLight,
-  },
-  primaryText: {
-    color: '#1565c0',
-  },
-  secondaryText: {
-    color: '#2e7d32',
-  },
-  successText: {
-    color: '#2e7d32',
-  },
-  warningText: {
-    color: '#f57f17',
-  },
-  dangerText: {
-    color: '#c62828',
-  },
-  infoText: {
-    color: '#1565c0',
-  },
-  icon: {
-    marginRight: 4,
+  muscleGroupBadge: {
+    marginRight: spacing.xs,
+    marginBottom: spacing.xs,
   },
 });

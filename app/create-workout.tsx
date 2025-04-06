@@ -1,133 +1,142 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { useSupabase } from '../lib/SupabaseContext';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
+import { useSupabase } from '../lib/SupabaseContext';
+import { colors, typography, spacing, commonStyles } from '../lib/styles';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import Card from '../components/Card';
 import { Picker } from '@react-native-picker/picker';
 
 export default function CreateWorkoutScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [duration, setDuration] = useState('');
-  const [difficulty, setDifficulty] = useState('beginner');
-  const [isPublic, setIsPublic] = useState(false);
+  const [difficulty, setDifficulty] = useState('');
+  const [estimatedDuration, setEstimatedDuration] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
   const supabase = useSupabase();
-
+  
+  const difficultyLevels = ['Beginner', 'Intermediate', 'Advanced'];
+  
   async function handleCreateWorkout() {
     if (!name) {
-      Alert.alert('Error', 'Please enter a workout name');
+      setError('Workout name is required');
       return;
     }
     
     try {
       setLoading(true);
+      setError('');
       
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) throw new Error('No user found');
       
-      const newWorkout = {
-        user_id: user.id,
-        name,
-        description: description || null,
-        duration: duration ? parseInt(duration) : null,
-        difficulty,
-        is_public: isPublic,
-      };
-      
       const { data, error } = await supabase
         .from('workouts')
-        .insert(newWorkout)
-        .select()
-        .single();
+        .insert([
+          {
+            name,
+            description,
+            difficulty,
+            estimated_duration: estimatedDuration ? parseInt(estimatedDuration) : null,
+            user_id: user.id,
+          }
+        ])
+        .select();
         
       if (error) throw error;
       
-      Alert.alert('Success', 'Workout created successfully');
-      router.push(`/workout/${data.id}`);
+      Alert.alert(
+        'Success',
+        'Workout created successfully',
+        [
+          { 
+            text: 'Add Exercises', 
+            onPress: () => router.push(`/workout/${data[0].id}`) 
+          },
+          {
+            text: 'Go to Workouts',
+            onPress: () => router.push('/workouts'),
+            style: 'cancel'
+          }
+        ]
+      );
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.error('Error creating workout:', error);
+      setError(error.message || 'An error occurred while creating the workout');
     } finally {
       setLoading(false);
     }
   }
-
+  
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Create New Workout</Text>
-      
-      <View style={styles.formContainer}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Workout Name *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Full Body Workout"
-            value={name}
-            onChangeText={setName}
-          />
-        </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <Card style={styles.formCard}>
+        <Text style={styles.title}>Create New Workout</Text>
         
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Describe your workout..."
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            numberOfLines={4}
-          />
-        </View>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
         
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Duration (minutes)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., 45"
-            value={duration}
-            onChangeText={setDuration}
-            keyboardType="numeric"
-          />
-        </View>
+        <Input
+          label="Workout Name"
+          value={name}
+          onChangeText={setName}
+          placeholder="Enter workout name"
+          required
+        />
         
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Difficulty</Text>
-          <View style={styles.pickerContainer}>
+        <Input
+          label="Description"
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Describe the workout"
+          multiline
+          numberOfLines={4}
+          style={styles.textArea}
+        />
+        
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Difficulty Level</Text>
+          <View style={styles.pickerWrapper}>
             <Picker
               selectedValue={difficulty}
               onValueChange={(itemValue) => setDifficulty(itemValue)}
               style={styles.picker}
             >
-              <Picker.Item label="Beginner" value="beginner" />
-              <Picker.Item label="Intermediate" value="intermediate" />
-              <Picker.Item label="Advanced" value="advanced" />
+              <Picker.Item label="Select difficulty" value="" />
+              {difficultyLevels.map((level) => (
+                <Picker.Item key={level} label={level} value={level.toLowerCase()} />
+              ))}
             </Picker>
           </View>
         </View>
         
-        <View style={styles.switchContainer}>
-          <Text style={styles.label}>Make Public</Text>
-          <TouchableOpacity
-            style={[styles.switch, isPublic ? styles.switchOn : styles.switchOff]}
-            onPress={() => setIsPublic(!isPublic)}
-          >
-            <View style={[styles.switchThumb, isPublic ? styles.switchThumbOn : styles.switchThumbOff]} />
-          </TouchableOpacity>
-        </View>
+        <Input
+          label="Estimated Duration (minutes)"
+          value={estimatedDuration}
+          onChangeText={(text) => setEstimatedDuration(text.replace(/[^0-9]/g, ''))}
+          placeholder="Enter estimated duration"
+          keyboardType="numeric"
+        />
         
-        <TouchableOpacity 
-          style={styles.button}
+        <Button
+          title={loading ? "Creating..." : "Create Workout"}
           onPress={handleCreateWorkout}
           disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Create Workout</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          fullWidth
+          style={styles.submitButton}
+        />
+      </Card>
+      
+      <TouchableOpacity 
+        style={styles.cancelButton}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.cancelButtonText}>Cancel</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -135,94 +144,59 @@ export default function CreateWorkoutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
+  },
+  contentContainer: {
+    padding: spacing.md,
+  },
+  formCard: {
+    padding: spacing.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 20,
-    textAlign: 'center',
+    fontSize: typography.fontSizes.xl,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.dark,
+    marginBottom: spacing.lg,
   },
-  formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    margin: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
+  errorText: {
+    color: colors.danger,
+    marginBottom: spacing.md,
+    fontSize: typography.fontSizes.sm,
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
   pickerContainer: {
+    marginBottom: spacing.md,
+  },
+  pickerLabel: {
+    fontSize: typography.fontSizes.sm,
+    fontWeight: typography.fontWeights.medium,
+    color: colors.dark,
+    marginBottom: spacing.xs,
+  },
+  pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: colors.card,
+    marginBottom: spacing.sm,
   },
   picker: {
     height: 50,
   },
-  switchContainer: {
-    flexDirection: 'row',
+  submitButton: {
+    marginTop: spacing.md,
+  },
+  cancelButton: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+    padding: spacing.md,
+    marginTop: spacing.md,
   },
-  switch: {
-    width: 50,
-    height: 30,
-    borderRadius: 15,
-    padding: 2,
-  },
-  switchOn: {
-    backgroundColor: '#3498db',
-  },
-  switchOff: {
-    backgroundColor: '#ccc',
-  },
-  switchThumb: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#fff',
-  },
-  switchThumbOn: {
-    alignSelf: 'flex-end',
-  },
-  switchThumbOff: {
-    alignSelf: 'flex-start',
-  },
-  button: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  cancelButtonText: {
+    color: colors.primary,
+    fontSize: typography.fontSizes.md,
+    fontWeight: typography.fontWeights.medium,
   },
 });
